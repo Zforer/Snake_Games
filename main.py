@@ -35,10 +35,13 @@ TRANSLATIONS = {
         "statistics": "Статистика",
         "exit": "Выйти",
         "settings": "⚙",
+        "settings_title": "Настройки",
         "back": "Назад",
         "language": "Язык",
         "russian": "Русский",
         "english": "English",
+        "chinese": "中文",
+        "german": "Немецкий",
         "games_played": "Игр сыграно",
         "avg_apples": "Среднее яблок за игру",
         "max_apples": "Максимум яблок",
@@ -54,10 +57,12 @@ TRANSLATIONS = {
         "statistics": "Statistics",
         "exit": "Exit",
         "settings": "⚙",
+        "settings_title": "Settings",
         "back": "Back",
         "language": "Language",
         "russian": "Russian",
         "english": "English",
+        "chinese": "中文",
         "games_played": "Games played",
         "avg_apples": "Avg apples per game",
         "max_apples": "Max apples",
@@ -67,6 +72,50 @@ TRANSLATIONS = {
         "no_data": "No data",
         "pause": "Pause",
         "continue": "Continue",
+    },
+    "zh": {
+        "play": "开始游戏",
+        "statistics": "统计",
+        "exit": "退出",
+        "settings": "⚙",
+        "settings_title": "设置",
+        "back": "返回",
+        "language": "语言",
+        "russian": "俄语",
+        "english": "英语",
+        "chinese": "中文",
+        "german": "德语",
+        "games_played": "游戏次数",
+        "avg_apples": "平均每局苹果数",
+        "max_apples": "最多苹果数",
+        "score": "得分",
+        "game_over": "游戏结束！",
+        "restart": "按 R 重新开始 或按 ESC 返回菜单",
+        "no_data": "暂无数据",
+        "pause": "暂停",
+        "continue": "继续",
+    },
+    "de": {
+        "play": "Spielen",
+        "statistics": "Statistik",
+        "exit": "Beenden",
+        "settings": "⚙",
+        "settings_title": "Einstellungen",
+        "back": "Zurück",
+        "language": "Sprache",
+        "russian": "Russisch",
+        "english": "Englisch",
+        "chinese": "Chinesisch",
+        "german": "Deutsch",
+        "games_played": "Gespielte Spiele",
+        "avg_apples": "Ø Äpfel pro Spiel",
+        "max_apples": "Max. Äpfel",
+        "score": "Punkte",
+        "game_over": "Spiel vorbei!",
+        "restart": "Drücke R für Neustart oder ESC für Menü",
+        "no_data": "Keine Daten",
+        "pause": "Pause",
+        "continue": "Fortsetzen",
     }
 }
 
@@ -133,12 +182,19 @@ class DataManager:
 
 
 class Button:
-    def __init__(self, x, y, width, height, text, font_size=32):
+    def __init__(self, x, y, width, height, text, font_size=32, font=None):
         self.rect = pygame.Rect(x, y, width, height)
         self.text = text
         self.font_size = font_size
         self.hovered = False
-        self.font = pygame.font.SysFont("arial", font_size)
+        if font is not None:
+            self.font = font
+        else:
+            font_path = "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc"
+            if os.path.exists(font_path):
+                self.font = pygame.font.Font(font_path, font_size)
+            else:
+                self.font = pygame.font.Font(None, font_size)
 
     def draw(self, screen):
         color = COLOR_BUTTON_HOVER if self.hovered else COLOR_BUTTON
@@ -168,9 +224,11 @@ class SnakeGame:
         self.running = True
 
         # Шрифты
-        self.font_large = pygame.font.SysFont("arial", 48)
-        self.font_medium = pygame.font.SysFont("arial", 32)
-        self.font_small = pygame.font.SysFont("arial", 24)
+        font_path = "/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc"
+        font_to_use = font_path if os.path.exists(font_path) else None
+        self.font_large = pygame.font.Font(font_to_use, 48)
+        self.font_medium = pygame.font.Font(font_to_use, 32)
+        self.font_small = pygame.font.Font(font_to_use, 24)
 
         # Кнопки меню
         btn_width, btn_height = 250, 50
@@ -184,13 +242,29 @@ class SnakeGame:
             "exit": Button(center_x, start_y + 2 * (btn_height + gap), btn_width, btn_height, ""),
         }
 
-        # Кнопка настроек (левый верхний угол)
-        self.settings_button = Button(20, 20, 50, 50, "")
+        # Кнопка настроек (левый верхний угол) — отдельный шрифт для символа ⚙
+        symbol_font_path = "/usr/share/fonts/TTF/DejaVuSansCondensed.ttf"
+        if os.path.exists(symbol_font_path):
+            symbol_font = pygame.font.Font(symbol_font_path, 36)
+        else:
+            symbol_font = None
+        self.settings_button = Button(20, 20, 50, 50, "", font_size=36, font=symbol_font)
 
         # Кнопки настроек
         self.back_button = Button(center_x, 400, btn_width, btn_height, "")
-        self.lang_ru_button = Button(center_x - 130, 250, 120, 50, "")
-        self.lang_en_button = Button(center_x + 10, 250, 120, 50, "")
+
+        # Кнопки языков на всю ширину экрана
+        lang_margin = 40
+        lang_gap = 20
+        lang_count = 4
+        lang_btn_width = (WINDOW_WIDTH - 2 * lang_margin - (lang_count - 1) * lang_gap) // lang_count
+        lang_btn_height = 50
+        lang_y = 250
+        lang_font_size = 24
+        self.lang_ru_button = Button(lang_margin, lang_y, lang_btn_width, lang_btn_height, "", font_size=lang_font_size)
+        self.lang_en_button = Button(lang_margin + lang_btn_width + lang_gap, lang_y, lang_btn_width, lang_btn_height, "", font_size=lang_font_size)
+        self.lang_zh_button = Button(lang_margin + 2 * (lang_btn_width + lang_gap), lang_y, lang_btn_width, lang_btn_height, "", font_size=lang_font_size)
+        self.lang_de_button = Button(lang_margin + 3 * (lang_btn_width + lang_gap), lang_y, lang_btn_width, lang_btn_height, "", font_size=lang_font_size)
 
         # Кнопки статистики
         self.stats_back_button = Button(center_x, 450, btn_width, btn_height, "")
@@ -214,6 +288,8 @@ class SnakeGame:
         self.back_button.text = self.t("back")
         self.lang_ru_button.text = self.t("russian")
         self.lang_en_button.text = self.t("english")
+        self.lang_zh_button.text = self.t("chinese")
+        self.lang_de_button.text = self.t("german")
         self.stats_back_button.text = self.t("back")
         self.pause_continue_button.text = self.t("continue")
         self.pause_menu_button.text = self.t("exit")
@@ -315,6 +391,12 @@ class SnakeGame:
                 self.update_texts()
             elif self.lang_en_button.handle_event(event):
                 self.data_manager.set_language("en")
+                self.update_texts()
+            elif self.lang_zh_button.handle_event(event):
+                self.data_manager.set_language("zh")
+                self.update_texts()
+            elif self.lang_de_button.handle_event(event):
+                self.data_manager.set_language("de")
                 self.update_texts()
 
         elif self.state == GameState.PAUSED:
@@ -476,7 +558,7 @@ class SnakeGame:
         self.stats_back_button.draw(self.screen)
 
     def draw_settings(self):
-        title = self.font_large.render(self.t("settings"), True, COLOR_TEXT)
+        title = self.font_large.render(self.t("settings_title"), True, COLOR_TEXT)
         title_rect = title.get_rect(center=(WINDOW_WIDTH // 2, 80))
         self.screen.blit(title, title_rect)
 
@@ -486,19 +568,27 @@ class SnakeGame:
 
         # Подсветка выбранного языка
         lang = self.data_manager.get_language()
+        active_btn = None
         if lang == "ru":
-            self.lang_ru_button.rect.inflate_ip(4, 4)
-        else:
-            self.lang_en_button.rect.inflate_ip(4, 4)
+            active_btn = self.lang_ru_button
+        elif lang == "en":
+            active_btn = self.lang_en_button
+        elif lang == "zh":
+            active_btn = self.lang_zh_button
+        elif lang == "de":
+            active_btn = self.lang_de_button
+
+        if active_btn:
+            active_btn.rect.inflate_ip(4, 4)
 
         self.lang_ru_button.draw(self.screen)
         self.lang_en_button.draw(self.screen)
+        self.lang_zh_button.draw(self.screen)
+        self.lang_de_button.draw(self.screen)
 
         # Возвращаем размеры обратно
-        if lang == "ru":
-            self.lang_ru_button.rect.inflate_ip(-4, -4)
-        else:
-            self.lang_en_button.rect.inflate_ip(-4, -4)
+        if active_btn:
+            active_btn.rect.inflate_ip(-4, -4)
 
         self.back_button.draw(self.screen)
 
