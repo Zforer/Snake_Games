@@ -291,11 +291,17 @@ class SnakeGame:
 
         elif self.state == GameState.GAME_OVER:
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:
+                key_char = event.unicode.lower() if event.unicode else ""
+                if (event.key == pygame.K_r or event.key == pygame.K_RETURN
+                        or event.key == pygame.K_SPACE or key_char in ("r", "к")):
                     self.reset_game()
                     self.state = GameState.PLAYING
                 elif event.key == pygame.K_ESCAPE:
                     self.state = GameState.MENU
+            elif event.type == pygame.MOUSEBUTTONDOWN:
+                if event.button == 1:
+                    self.reset_game()
+                    self.state = GameState.PLAYING
 
         elif self.state == GameState.STATISTICS:
             if self.stats_back_button.handle_event(event):
